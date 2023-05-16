@@ -1,318 +1,419 @@
 #include<iostream>
+#include<windows.h>
+#include<conio.h>
 #include<fstream>
+#include<cstring>
+#include<cstdio>
+#include<cstdlib>
+#include<iomanip>
 using namespace std;
+//global variable declaration
+int k=7,r=0,flag=0;
+COORD coord = {0, 0};
 
-class shopping{
-private:
-  int pcode;
-  float price;
-  float discount;
-  string pname;
-public:
-  void menu();
-  void adminstrator();
-  void buyer();
-  void add();
-  void edit();
-  void rem();
-  void list();
-  void receipt();
+void gotoxy(int x, int y)
+{
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+struct date
+{
+    int mm,dd,yy;
 };
-void shopping :: menu(){
-  m:
-  int choice;
-  string email;
-  string password;
-  cout<<"\t\t\t                         \n";
-  cout<<"\t\t\t     SUPERMARKET MENU    \n";
-  cout<<"\t\t\t                         \n";
-  cout<<"\t\t\t_________________________\n";
-  cout<<"\t\t\t                         \n";
-  cout<<"\t\t\t|      1)Adminstrator    \n";
-  cout<<"\t\t\t|                        \n";
-  cout<<"\t\t\t|      2)Buyer           \n";
-  cout<<"\t\t\t|                        \n";
-  cout<<"\t\t\t|      3)Exit            \n";
-  cout<<"\t\t\t|                        \n";
-  cout<<"\t\t\t     Please Select       \n";
-  cin>>choice;
-  switch(choice){
-    case 1:
-      cout<<" Please Login \n";
-      cout<<" Enter Email  \n";
-      cin>>email;
-      cout<<" Enter Password \n";
-      cin>>password;
-      if(email=="nikhil125@gmail.com" && password == "iloveProgramming"){
-        adminstrator();
-      }
-      else{
-        cout<<"invalid password/email";
-      }
-      break;
-    case 2:
+
+ofstream fout;
+ifstream fin;
+
+class item
+{
+    int itemno;
+    char name[25];
+    date d;
+public:
+    void add()
     {
-      buyer();
+        cout<<"\n\n\tItem No: ";
+        cin>>itemno;
+        cout<<"\n\n\tName of the item: ";
+        cin>>name;
+//gets(name);
+        cout<<"\n\n\tManufacturing Date(dd-mm-yy): ";
+        cin>>d.mm>>d.dd>>d.yy;
     }
-    case 3:
+    void show()
     {
-      exit(0);
+        cout<<"\n\tItem No: ";
+        cout<<itemno;
+        cout<<"\n\n\tName of the item: ";
+        cout<<name;
+        cout<<"\n\n\tDate : ";
+        cout<<d.mm<<"-"<<d.dd<<"-"<<d.yy;
     }
-    default:
+    void report()
     {
-      cout<<"please select from given option";
+        gotoxy(3,k);
+        cout<<itemno;
+        gotoxy(13,k);
+        puts(name);
     }
-  }
-  goto m;
+    int retno()
+    {
+        return(itemno);
+
+    }
+
+};
+
+class amount: public item
+{
+    float price,qty,tax,gross,dis,netamt;
+public:
+    void add();
+    void show();
+    void report();
+    void calculate();
+    void pay();
+    float retnetamt()
+    {
+        return(netamt);
+    }
+} amt;
+
+void amount::add()
+{
+    item::add();
+    cout<<"\n\n\tPrice: ";
+    cin>>price;
+    cout<<"\n\n\tQuantity: ";
+    cin>>qty;
+    cout<<"\n\n\tTax percent: ";
+    cin>>tax;
+    cout<<"\n\n\tDiscount percent: ";
+    cin>>dis;
+    calculate();
+    fout.write((char *)&amt,sizeof(amt));
+    fout.close();
 }
-void shopping:: adminstrator(){
-  m:
-  int choice;
-  cout<<"\n\n\t\t\t Adminstrator MENU\n";
-  cout<<"\t\t\t|___1)Add The product____\n";
-  cout<<"\t\t\t|_______________________\n";
-  cout<<"\t\t\t|__2)Modify The Product__\n";
-  cout<<"\t\t\t|_______________________\n";
-  cout<<"\t\t\t|__3)Delete The Product__\n";
-  cout<<"\t\t\t|_______________________\n";
-  cout<<"\t\t\t|__4)Back To Main Menu___\n";
+void amount::calculate()
+{
+    gross=price+(price*(tax/100));
+    netamt=qty*(gross-(gross*(dis/100)));
+}
+void amount::show()
+{
+    fin.open("itemstore.dat",ios::binary);
+    fin.read((char*)&amt,sizeof(amt));
+    item::show();
+    cout<<"\n\n\tNet amount: ";
+    cout<<netamt;
+    fin.close();
+}
 
-  cout<<"\n\t\t\t Please Enter Your Choice";
-  cin>>choice;
+void amount::report()
+{
+    item::report();
+    gotoxy(23,k);
+    cout<<price;
+    gotoxy(33,k);
+    cout<<qty;
+    gotoxy(44,k);
+    cout<<tax;
+    gotoxy(52,k);
+    cout<<dis;
+    gotoxy(64,k);
+    cout<<netamt;
+    k=k+1;
+    if(k==50)
+    {
+        gotoxy(25,50);
+        cout<<"PRESS ANY KEY TO CONTINUE...";
+        getch();
+        k=7;
+        system("cls");
+        gotoxy(30,3);
+        cout<<" ITEM DETAILS ";
+        gotoxy(3,5);
+        cout<<"NUMBER";
+        gotoxy(13,5);
+        cout<<"NAME";
+        gotoxy(23,5);
+        cout<<"PRICE";
+        gotoxy(33,5);
+        cout<<"QUANTITY";
+        gotoxy(44,5);
+        cout<<"TAX";
+        gotoxy(52,5);
+        cout<<"DEDUCTION";
+        gotoxy(64,5);
+        cout<<"NET AMOUNT";
+    }
+}
 
-  switch(choice){
+void amount::pay()
+{
+    show();
+    cout<<"\n\n\n\t\t*********************************************";
+    cout<<"\n\t\t                 DETAILS                  ";
+    cout<<"\n\t\t*********************************************";
+    cout<<"\n\n\t\tPRICE                     :"<<price;
+    cout<<"\n\n\t\tQUANTITY                  :"<<qty;
+    cout<<"\n\t\tTAX PERCENTAGE              :"<<tax;
+    cout<<"\n\t\tDISCOUNT PERCENTAGE         :"<<dis;
+    cout<<"\n\n\n\t\tNET AMOUNT              :Rs."<<netamt;
+    cout<<"\n\t\t*********************************************";
+}
+
+int main()
+{
+    cout.setf(ios::fixed);
+    cout.setf(ios::showpoint);
+    cout<<setprecision(2);
+    fstream tmp("temp.dat",ios::binary|ios::out);
+menu:
+    system("cls");
+    gotoxy(25,2);
+    cout<<"Super Market Billing ";
+    gotoxy(25,3);
+    cout<<"===========================\n\n";
+    cout<<"\n\t\t1.Bill Report\n\n";
+    cout<<"\t\t2.Add/Remove/Edit Item\n\n";
+    cout<<"\t\t3.Show Item Details\n\n";
+    cout<<"\t\t4.Exit\n\n";
+    cout<<"\t\tPlease Enter Required Option: ";
+    int ch,ff;
+    float gtotal;
+    cin>>ch;
+    switch(ch)
+    {
     case 1:
-    add();
-    break;
+ss:
+        system("cls");
+        gotoxy(25,2);
+        cout<<"Bill Details";
+        gotoxy(25,3);
+        cout<<"================\n\n";
+        cout<<"\n\t\t1.All Items\n\n";
+        cout<<"\t\t2.Back to Main menu\n\n";
+        cout<<"\t\tPlease Enter Required Option: ";
+        int cho;
+        cin>>cho;
+        if(cho==1)
+        {
+            system("cls");
+            gotoxy(30,3);
+            cout<<" BILL DETAILS ";
+            gotoxy(3,5);
+            cout<<"ITEM NO";
+            gotoxy(13,5);
+            cout<<"NAME";
+            gotoxy(23,5);
+            cout<<"PRICE";
+            gotoxy(33,5);
+            cout<<"QUANTITY";
+            gotoxy(44,5);
+            cout<<"TAX %";
+            gotoxy(52,5);
+            cout<<"DISCOUNT %";
+            gotoxy(64,5);
+            cout<<"NET AMOUNT";
+            fin.open("itemstore.dat",ios::binary);
+            if(!fin)
+            {
+                cout<<"\n\nFile Not Found...";
+                goto menu;
+            }
+            fin.seekg(0);
+            gtotal=0;
+            while(!fin.eof())
+            {
+                fin.read((char*)&amt,sizeof(amt));
+                if(!fin.eof())
+                {
+                    amt.report();
+                    gtotal+=amt.retnetamt();
+                    ff=0;
+                }
+                if(ff!=0) gtotal=0;
+            }
+            gotoxy(17,k);
+            cout<<"\n\n\n\t\t\tGrand Total="<<gtotal;
+            getch();
+            fin.close();
+        }
+        if(cho==2)
+        {
+            goto menu;
+        }
+        goto ss;
     case 2:
-    edit();
-    break;
+db:
+        system("cls");
+        gotoxy(25,2);
+        cout<<"Bill Editor";
+        gotoxy(25,3);
+        cout<<"=================\n\n";
+        cout<<"\n\t\t1.Add Item Details\n\n";
+        cout<<"\t\t2.Edit Item Details\n\n";
+        cout<<"\t\t3.Delete Item Details\n\n";
+        cout<<"\t\t4.Back to Main Menu ";
+        int apc;
+        cin>>apc;
+        switch(apc)
+        {
+        case 1:
+            fout.open("itemstore.dat",ios::binary|ios::app);
+            amt.add();
+            cout<<"\n\t\tItem Added Successfully!";
+            getch();
+            goto db;
+
+        case 2:
+            int ino;
+            flag=0;
+            cout<<"\n\n\tEnter Item Number to be Edited :";
+            cin>>ino;
+            fin.open("itemstore.dat",ios::binary);
+            fout.open("itemstore.dat",ios::binary|ios::app);
+            if(!fin)
+            {
+                cout<<"\n\nFile Not Found...";
+                goto menu;
+            }
+            fin.seekg(0);
+            r=0;
+            while(!fin.eof())
+            {
+                fin.read((char*)&amt,sizeof(amt));
+                if(!fin.eof())
+                {
+                    int x=amt.item::retno();
+                    if(x==ino)
+                    {
+                        flag=1;
+                        fout.seekp(r*sizeof(amt));
+                        system("cls");
+                        cout<<"\n\t\tCurrent Details are\n";
+                        amt.show();
+                        cout<<"\n\n\t\tEnter New Details\n";
+                        amt.add();
+                        cout<<"\n\t\tItem Details editted";
+                    }
+                }
+                r++;
+            }
+            if(flag==0)
+            {
+                cout<<"\n\t\tItem No does not exist...Please Retry!";
+                getch();
+                goto db;
+            }
+            fin.close();
+            getch();
+            goto db;
+
+        case 3:
+            flag=0;
+            cout<<"\n\n\tEnter Item Number to be deleted :";
+            cin>>ino;
+            fin.open("itemstore.dat",ios::binary);
+            if(!fin)
+            {
+                cout<<"\n\nFile Not Found...";
+                goto menu;
+            }
+//fstream tmp("temp.dat",ios::binary|ios::out);
+            fin.seekg(0);
+            while(fin.read((char*)&amt, sizeof(amt)))
+            {
+                int x=amt.item::retno();
+                if(x!=ino)
+                    tmp.write((char*)&amt,sizeof(amt));
+                else
+                {
+                    flag=1;
+                }
+            }
+            fin.close();
+            tmp.close();
+            fout.open("itemstore.dat",ios::trunc|ios::binary);
+            fout.seekp(0);
+            tmp.open("temp.dat",ios::binary|ios::in);
+            if(!tmp)
+            {
+                cout<<"Error in File";
+                goto db;
+            }
+            while(tmp.read((char*)&amt,sizeof(amt)))
+                fout.write((char*)&amt,sizeof(amt));
+            tmp.close();
+            fout.close();
+            if(flag==1)
+                cout<<"\n\t\tItem Succesfully Deleted";
+            else if (flag==0)
+                cout<<"\n\t\tItem does not Exist! Please Retry";
+            getch();
+            goto db;
+        case 4:
+            goto menu;
+        default:
+            cout<<"\n\n\t\tWrong Choice!!! Retry";
+            getch();
+            goto db;
+        }
     case 3:
-    rem();
-    break;
+        system("cls");
+        flag=0;
+        int ino;
+        cout<<"\n\n\t\tEnter Item Number :";
+        cin>>ino;
+        fin.open("itemstore.dat",ios::binary);
+        if(!fin)
+        {
+            cout<<"\n\nFile Not Found...\nProgram Terminated!";
+            goto menu;
+        }
+        fin.seekg(0);
+        while(fin.read((char*)&amt,sizeof(amt)))
+        {
+            int x=amt.item::retno();
+            if(x==ino)
+            {
+                amt.pay();
+                flag=1;
+                break;
+            }
+        }
+        if(flag==0)
+            cout<<"\n\t\tItem does not exist....Please Retry!";
+        getch();
+        fin.close();
+        goto menu;
     case 4:
-    menu();
-    break;
-    default:
-    cout<<"invalid Choices";
-  }
-  goto m;
-}
-void shopping:: buyer(){
-  m:
-  int choice;
-  cout<<"\t\t\t\t Buyer \n";
-  cout<<"\t\t\t\t_________ \n";
-  cout<<"                     ";
-  cout<<"\t\t\t\t 1) Buy Product \n";
-  cout<<"                      ";
-  cout<<"\t\t\t\t 2) Go Back \n";
-  cout<<"\t\t\t\t\t Enter your choice \n";
-  cin>>choice;
-
-  switch(choice){
-    case 1:
-    receipt();
-    break;
-    case 2:
-    menu();
-    default:
-    cout<<"Invalid Choice";
-  }
-  goto m;
-}
-void shopping:: add(){
-  m:
-  fstream data;
-  int c;
-  int token=0;
-  float p;
-  float d;
-  string n;
-  cout<<"\n Add new Product";
-  cout<<"\n product code of product: ";
-  cin>>pcode;
-  cout<<"\n Name Of Product: ";
-  cin>>pname;
-  cout<<"\n Price Of Product: ";
-  cin>>price;
-  cout<<"\n Discount On Product: ";
-  cin>>discount;
-
-  data.open("database.txt",ios::in);
-
-  if(!data){
-    data.open("database.txt",ios::app|ios::out);
-  //  data<<" "<<pcode<<" "<<pname<<" "<<price<<" "<<discount<<"\n";
-    data.close();
-  }else{
-    data>>c>>n>>p>>d;
-    while(!data.eof()){
-      if(c== pcode){
-        token++;
-      }
-      data>>c>>n>>p>>d;
-    }
-    data.close();
-  }
-  if(token == 1){
-    goto m;
-  }else{
-    data.open("database.txt",ios::app|ios::out);
-    data<<" "<<pcode<<" "<<pname<<" "<<price<<" "<<discount<<"\n";
-    data.close();
-  }
-   cout<<"\n\n\t\t\t record inserted";
-}
-
-void shopping :: edit(){
-  fstream data,data1;
-  int pkey;
-  int token = 0;
-  int c;
-  float p;
-  float d;
-  string n;
-  cout<<"\n\n\t\t\t Modify The Record";
-  cout<<"\n\n\t\t\t Product Code:";
-  cin>>pkey;
-
-  data.open("database.txt",ios::in);
-  if(!data){
-    cout<<"\n\n File Dosnt Exist";
-  }else{
-    data1.open("database.txt",ios::app|ios::out);
-    data>>pcode>>pname>>price>>discount;
-    while(!data.eof()){
-      if(pkey == pcode){
-        cout<<"\n\t\t Product New Code";
-        cin>>c;
-        cout<<"\n\t\t Name of The Product";
-        cin>>n;
-        cout<<"\n\t\t Price:";
-        cin>>p;
-        cout<<"\n\t\t Discount: ";
-        cin>>d;
-        data1<<" "<<c<<" "<<n<<" "<<p<<" "<<d<<"\n";
-        cout<<"\n\t\t\t Record Edited";
-        token++;
-      }else{
-        data1<<" "<<pcode<<" "<<pname<<" "<<price<<" "<<discount<<"\n";
-      }
-      data>>pcode>>pname>>price>>discount;
-    }
-    data.close();
-    data1.close();
-    remove("database.txt");
-    rename("database1.txt","database.txt");
-    if(token == 0){
-      cout<<"\n\t\t Record Not Found Sorry";
-    }
-  }
-}
-void shopping::rem(){
-  fstream data,data1;
-  int pkey;
-  int token = 0;
-  cout<<"delete Product \n";
-  cout<<" Enter Product Code \n";
-  cin>>pkey;
-  data.open("database.txt",ios::in);
-  if(!data){
-    cout<<"file Dos'nt Exist";
-  }else{
-    data1.open("database1.txt",ios::app|ios::out);
-    data>>pcode>>pname>>price>>discount;
-    while(!data.eof()){
-      if(pcode == pkey){
-        cout<<"Packet Deleted SucessFully \n";
-        token++;
-      }else{
-        data1<<" "<<pcode<<" "<<pname<<" "<<price<<" "<<discount<<"\n";
-      }
-      data>>pcode>>pname>>price>>discount;
-    }
-    data.close();
-    data1.close();
-    remove("database.txt");
-    rename("database1.txt","database.txt");
-
-    if(token == 0){
-      cout<<"Record not Found \n";
-    }
-  }
-}
-void shopping:: list(){
-  fstream data;
-  data.open("database.txt",ios::in);
-  cout<<"\n\n\n|_____________________\n";
-  cout<<"proNo\t\tName\t\tPrice\n";
-  cout<<"\n\n\n|_____________________\n";
-  data>>pcode>>pname>>price>>discount;
-  while(!data.eof()){
-    cout<<pcode<<"\t\t"<<pname<<"\t\t"<<price<<"\n";
-    data>>pcode>>pname>>price>>discount;
-  }
-  data.close();
-}
-void shopping:: receipt(){
-  fstream data;
-
-  int arrc[100];
-  int arrq[100];
-  char choice;
-  int c = 0;
-  float amount = 0;
-  float discount = 0;
-  float total = 0;
-  cout<<"\n\n\t\t\t Receipt";
-  data.open("database.txt",ios::in);
-  if(!data){
-    cout<<"\n\n Empty Database";
-  }else{
-    data.close();
-
-    list();
-    cout<<"please Place the order \n";
-
-    do{
-      m:
-      cout<<"Enter Product Code \n";
-      cin>>arrc[c];
-      cout<<"Enter the product Quantity \n";
-      cin>>arrq[c];
-      for(int i = 0; i < c; i++){
-        if(arrc[c]==arrc[i]){
-          cout<<"Duplicate Code Try Again \n";
-          goto m;
+        system("cls");
+        gotoxy(20,20);
+        cout<<"ARE YOU SURE, YOU WANT TO EXIT (Y/N)?";
+        char yn;
+        cin>>yn;
+        if((yn=='Y')||(yn=='y'))
+        {
+            gotoxy(12,20);
+            system("cls");
+            cout<<"************************** THANKS **************************************";
+            getch();
+            exit(0);
         }
-      }
-      c++;
-      cout<<"do you want to buy another product if Yes press 'y' else 'no'";
-      cin>>choice;
-    }while(choice == 'y');
-
-    cout<<"\n\n\t\t_____________Reciept_________";
-    cout<<"\nProduct No\t Product Name \t Product Quantity \t price \t Amount\t Amount with Discount \n";
-
-    for(int i = 0; i < c; i++){
-      data.open("database.txt",ios::in);
-      data>>pcode>>pname>>price>>discount;
-      while(!data.eof()){
-        if(pcode == arrc[i]){
-          amount = arrq[i]*price;
-          discount = amount-(amount*discount/100);
-          total = total+discount;
-          cout<<"\n"<<pcode<<"\t\t"<<pname<<"\t\t"<<arrq[i]<<"\t\t"<<price<<"\t"<<amount<<"\t"<<discount;
+        else if((yn=='N')||(yn=='n'))
+            goto menu;
+        else
+        {
+            goto menu;
         }
-        data>>pcode>>pname>>price>>discount;
-      }
+    default:
+        cout<<"\n\n\t\tWrong Choice....Please Retry!";
+        getch();
+        goto menu;
     }
-    data.close();
-  }
-  cout<<"Total Amount : "<<total;
-}
-int main(){
-  shopping s;
-  s.menu();
+    return 0;
 }
